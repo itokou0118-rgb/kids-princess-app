@@ -14,6 +14,34 @@
   let recent = [];
   let score = 0;
   let awaitingAnswer = true;
+  let currentToken = 0;
+
+  const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
+
+  function loadImageIfExists(url) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(url);
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+  }
+
+  async function findPhotoFor(id) {
+    for (const ext of PHOTO_EXTENSIONS) {
+      const url = await loadImageIfExists(`images/${id}.${ext}`);
+      if (url) return url;
+    }
+    return null;
+  }
+
+  async function applyPhotoIfAvailable(princess, token) {
+    const photoUrl = await findPhotoFor(princess.id);
+    if (token !== currentToken) return; // 別の問題にすでに進んでいたら何もしない
+    if (photoUrl) {
+      portraitEl.innerHTML = `<img src="${photoUrl}" alt="${princess.name}">`;
+    }
+  }
 
   const SpeechRecognitionCtor =
     window.SpeechRecognition || window.webkitSpeechRecognition || null;
@@ -47,6 +75,7 @@
 
   function newQuestion() {
     current = pickPrincess();
+    const token = ++currentToken;
     awaitingAnswer = true;
     resultEl.hidden = true;
     resultEl.className = "result";
@@ -55,6 +84,7 @@
     portraitEl.innerHTML = renderPortraitSVG(current);
     questionText.textContent = "この人は　だれでしょう？";
     speak("この人は　だれでしょう？");
+    applyPhotoIfAvailable(current, token);
   }
 
   function launchConfetti() {
