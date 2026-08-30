@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>だれでしょう？プリンセスクイズ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>✨ だれでしょう？プリンセスクイズ ✨</h1>
+      <div class="score">せいかい <span id="scoreCount">0</span> かい 🌟</div>
+    </header>
+
+    <main>
+      <div class="card">
+        <div id="portrait" class="portrait"></div>
+
+        <div class="question">
+          <p id="questionText">この人は　だれでしょう？</p>
+          <button id="repeatBtn" class="icon-btn" title="もういちど きく">🔊 もういちど きいてね</button>
+        </div>
+
+        <div class="answer-area">
+          <button id="micBtn" class="mic-btn">
+            <span class="mic-icon">🎤</span>
+            <span class="mic-label">タップして　こたえてね</span>
+          </button>
+          <p id="listeningStatus" class="listening-status" hidden>きいているよ…</p>
+        </div>
+
+        <div id="result" class="result" hidden></div>
+
+        <button id="choicesToggle" class="link-btn">こえが　つたわらない　ときは　ここをタップ</button>
+        <div id="choices" class="choices" hidden></div>
+      </div>
+    </main>
+
+    <div id="confetti" class="confetti" hidden></div>
+  </div>
+
+  <script src="princesses.js"></script>
+  <script src="portrait.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
