@@ -63,13 +63,17 @@
     return chosen;
   }
 
-  function speak(text) {
+  function speak(text, onEnd) {
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "ja-JP";
     utter.rate = 0.95;
     utter.pitch = 1.1;
+    if (onEnd) {
+      utter.addEventListener("end", onEnd, { once: true });
+      utter.addEventListener("error", onEnd, { once: true });
+    }
     window.speechSynthesis.speak(utter);
   }
 
@@ -104,19 +108,31 @@
   function showResult(isCorrect) {
     awaitingAnswer = false;
     resultEl.hidden = false;
+    let message;
     if (isCorrect) {
       score++;
       scoreCountEl.textContent = String(score);
       resultEl.classList.add("correct");
       resultEl.textContent = "せいかい！すごいね！🎉";
-      speak("せいかい！　すごいね！");
+      message = "せいかい！　すごいね！";
       launchConfetti();
     } else {
       resultEl.classList.add("wrong");
       resultEl.textContent = `ざんねん！　正解は「${current.name}」でした`;
-      speak(`ざんねん。せいかいは、${current.name}　でした`);
+      message = `ざんねん。せいかいは、${current.name}　でした`;
     }
-    setTimeout(newQuestion, 2800);
+
+    let advanced = false;
+    const advanceToNext = () => {
+      if (advanced) return;
+      advanced = true;
+      clearTimeout(fallbackTimer);
+      setTimeout(newQuestion, 500);
+    };
+    // 読み上げが終わってから次へ。speechSynthesisが使えない/失敗した場合は
+    // フォールバックのタイマーで必ず次の問題に進む。
+    const fallbackTimer = setTimeout(advanceToNext, 6000);
+    speak(message, advanceToNext);
   }
 
   function handleSpokenText(alternatives) {
