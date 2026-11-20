@@ -132,14 +132,19 @@
       : "タップして　こたえてね";
   }
 
+  function revealChoicesWithVoice(message) {
+    setListening(false);
+    if (message) speak(message);
+    choicesEl.hidden = false;
+    renderChoices();
+  }
+
   micBtn.addEventListener("click", () => {
     if (!awaitingAnswer) return;
     if (!recognition) {
-      alert(
-        "このブラウザは音声にんしきに対応していません。下の「ボタンでこたえる」を使ってね。"
+      revealChoicesWithVoice(
+        "おこえが つかえないみたい。下の　ボタンで　こたえてね"
       );
-      choicesEl.hidden = false;
-      renderChoices();
       return;
     }
     try {
@@ -152,7 +157,19 @@
   if (recognition) {
     recognition.addEventListener("start", () => setListening(true));
     recognition.addEventListener("end", () => setListening(false));
-    recognition.addEventListener("error", () => setListening(false));
+    recognition.addEventListener("error", (event) => {
+      if (
+        event.error === "not-allowed" ||
+        event.error === "service-not-allowed" ||
+        event.error === "audio-capture"
+      ) {
+        revealChoicesWithVoice(
+          "マイクが　つかえないみたい。下の　ボタンで　こたえてね"
+        );
+      } else {
+        setListening(false);
+      }
+    });
     recognition.addEventListener("result", (event) => {
       const alternatives = Array.from(event.results[0]).map((r) => r.transcript);
       handleSpokenText(alternatives);
