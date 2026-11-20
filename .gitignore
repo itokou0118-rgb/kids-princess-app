@@ -1,0 +1,4 @@
+# 公開リポジトリのため、自分で撮った写真(images/配下)は追跡しない。
+# READMEだけは案内のためコミットする。
+images/*
+!images/README.md
