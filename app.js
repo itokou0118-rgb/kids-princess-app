@@ -87,7 +87,9 @@
     choicesEl.innerHTML = "";
     portraitEl.innerHTML = renderPortraitSVG(current);
     questionText.textContent = "この人は　だれでしょう？";
-    speak("この人は　だれでしょう？");
+    speak("この人は　だれでしょう？", () => {
+      if (token === currentToken) startListening();
+    });
     applyPhotoIfAvailable(current, token);
   }
 
@@ -155,7 +157,10 @@
     renderChoices();
   }
 
-  micBtn.addEventListener("click", () => {
+  let micForceStopTimer = null;
+  const LISTEN_DURATION_MS = 4000;
+
+  function startListening() {
     if (!awaitingAnswer) return;
     if (!recognition) {
       revealChoicesWithVoice(
@@ -166,14 +171,39 @@
     try {
       recognition.start();
     } catch (e) {
-      // 既に開始している場合など
+      // 既に開始している場合などは無視
     }
+  }
+
+  micBtn.addEventListener("click", () => {
+    startListening();
   });
 
   if (recognition) {
-    recognition.addEventListener("start", () => setListening(true));
-    recognition.addEventListener("end", () => setListening(false));
+    recognition.addEventListener("start", () => {
+      setListening(true);
+      clearTimeout(micForceStopTimer);
+      // 4秒たったら自動で聞き取りを打ち切る
+      micForceStopTimer = setTimeout(() => {
+        try {
+          recognition.stop();
+        } catch (e) {
+          // 何もしない
+        }
+      }, LISTEN_DURATION_MS);
+    });
+    recognition.addEventListener("end", () => {
+      clearTimeout(micForceStopTimer);
+      setListening(false);
+      if (awaitingAnswer) {
+        // 聞き取れなかった場合はボタンでこたえられるようにする
+        revealChoicesWithVoice(
+          "よく　きこえなかったよ。下の　ボタンで　こたえてね"
+        );
+      }
+    });
     recognition.addEventListener("error", (event) => {
+      clearTimeout(micForceStopTimer);
       if (
         event.error === "not-allowed" ||
         event.error === "service-not-allowed" ||
@@ -187,6 +217,7 @@
       }
     });
     recognition.addEventListener("result", (event) => {
+      clearTimeout(micForceStopTimer);
       const alternatives = Array.from(event.results[0]).map((r) => r.transcript);
       handleSpokenText(alternatives);
     });
